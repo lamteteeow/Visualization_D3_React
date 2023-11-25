@@ -136,7 +136,6 @@
       // is not executed again
       React.useEffect(() => {
         d3.csv(csvUrl, row).then((data) => {
-          // console.log(data);
           setNewState(data);
         });
       }, []);
@@ -174,15 +173,20 @@
 
     // the data we work on is composed of land and interiors (use destructuring)
     const Countries = ({ worldAtlas: { land, interiors } }) => (
-      // TODO 2.1: delete the following line
-      <div>Placeholder</div>
       // TODO 4.2: Memoization for land and interiors
-      // TODO 2.1: create a group with class name countries for styling that wraps the following JS scope
-      // TODO 2.1: enter a JS scope inside the group element (everything that follows will be in curly braces)
-      // TODO 2.1: create a react fragment
-      // TODO 2.1: inside the fragment enter another JS scope
-      // TODO 2.1: map the land features to path elements that draw the land masses (styling will make sure the paths are filled with the correct color)
-      // TODO: 2.1: draw another path for the interiors
+      <g className="countries">
+        {
+          <>
+            {
+              land.features.map((feature, i) => (
+                <path key={i} className="land" d={path(feature)} />
+              ))
+            }
+            <path className="interiors" d={path(interiors)} />
+          </>
+        }
+      </g>
+
     );
 
     // --------------------------------------------------
@@ -190,18 +194,21 @@
     // --------------------------------------------------
 
     // TODO 2.2: define a function that accesses the number of dead and missing migrants from the data set called sizeValue
-    //const sizeValue =;
+    const sizeValue = (data) => {
+      let total_dead_and_missing = [];
+      data.forEach(row => {
+        total_dead_and_missing.push(+row["Total Dead and Missing"]);
+      });
+      // console.log(total_dead_and_missing);
+      return total_dead_and_missing;
+    }
     // defines the maximum radius of a bubble
     const maxRadius = 15;
 
     const Bubbles = ({ data }) => {
       // TODO 4.2: Memoization for size scale
-      // TODO 2.2: the area covered by a bubble should be scaled proportional to the sizeValue. define a sizeScale using d3.scaleSqrt or d3.scaleLinear (think about which one is a better fit)
-      //const sizeScale =
-      // TODO 2.2: set the domain to the scale using the .domain function. the domain should start at zero and end at the maximum of the data (use sizeValue)
-      // TODO 2.2: set the domain to the scale using the .range function. the range should start at zero and end at maxRadius
-
-      // TODO 2.2: return the bubbles svg definition
+      const sizeScale = d3.scaleSqrt().domain([0, d3.max(sizeValue(data))]).range([0, maxRadius]);
+      // console.log(d3.max(sizeValue(data))); // 1022
       return (
         // TODO 2.2 wrap everything that follows in a group element with className bubbleMarks
         // TODO 2.2: enter a JS scope
@@ -209,7 +216,15 @@
         // TODO 2.2: use the projection to get the x and y coordinates from the coords
         // TODO 2.2: return a circle with the key being the index, x and y the extracted coordinates and the radius passed through the sizeScale
         // TODO 2.2: delete the following line
-        <div>Placeholder</div>
+        <g className="bubbleMarks">
+          {
+            data.map((row, i) => (
+              console.log(projection(row.coords)),
+              <circle key={i} cx={projection(row.coords)[0]} cy={projection(row.coords)[1]} r={sizeScale(row["Total Dead and Missing"])} />
+              // <circle key={i} cx={480} cy={250} r={sizeScale(row["Total Dead and Missing"])} />
+            ))
+          }
+        </g>
       );
     };
 
@@ -364,8 +379,9 @@
           <Introduction data={data} />
           <svg width={width} height={height}>
             <WorldGraticule width={width} height={height} />
-              // TODO 2.1: add the countries element and pass it the world Atlas
-            // TODO 2.2: add the Bubbles element and pass it the data 
+            <Countries worldAtlas={worldAtlas} />
+            // TODO 2.2: add the Bubbles element and pass it the data
+            <Bubbles data={data} />
             // TODO 4.1: Pass the filtered data to bubbles
             <g
               transform={`translate(0, ${height - dateHistogramSize * height})`}
