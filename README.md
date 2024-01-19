@@ -7,5 +7,5 @@ Libraries:
 
 <p align="center">
   <img src="thumbnail.png" width=800><br/>
-  <i>Vietnam time use</i>
+  <i>Thumbnail</i>
 </p>
