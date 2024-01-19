@@ -4,8 +4,3 @@ Programming exercises from Visualization course led by Prof. Dr.-Ing. Tobias Gü
 Libraries:
 - D3
 - React
-
-<p align="center">
-  <img src="thumbnail.png" width=800><br/>
-  <i>Thumbnail</i>
-</p>
