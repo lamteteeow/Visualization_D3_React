@@ -2,477 +2,425 @@
 <html>
 
 <head>
-  <title>Interactive: Missing Migrants on a World Map over Time</title>
-  <meta charset="utf-8" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet" />
+    <title>Interactive: Missing Migrants on a World Map over Time</title>
+    <meta charset="utf-8" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet" />
 
-  <style>
-    body {
-      margin: 0;
-      overflow: hidden;
-      font-family: "Tahoma", sans-serif;
-    }
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: "Tahoma", sans-serif;
+        }
 
-    .countries .land {
-      fill: #ececec;
-    }
+        .countries .land {
+            fill: #ececec;
+        }
 
-    .countries .interiors {
-      fill: none;
-      stroke: #d9dfe0;
-    }
+        .countries .interiors {
+            fill: none;
+            stroke: #d9dfe0;
+        }
 
-    .worldGraticule .sphere {
-      fill: #fbfbfb;
-    }
+        .worldGraticule .sphere {
+            fill: #fbfbfb;
+        }
 
-    .worldGraticule .graticule,
-    .tick line {
-      fill: none;
-      stroke: #ececec;
-    }
+        .worldGraticule .graticule,
+        .tick line {
+            fill: none;
+            stroke: #ececec;
+        }
 
-    circle {
-      fill: #137b80;
-      opacity: 0.3;
-    }
+        circle {
+            fill: #137b80;
+            opacity: 0.3;
+        }
 
-    .tick text {
-      font-size: 0.5em;
-      fill: #8e8883;
-    }
+        .tick text {
+            font-size: 0.5em;
+            fill: #8e8883;
+        }
 
-    .mark {
-      fill: #137b80;
-    }
+        .mark {
+            fill: #137b80;
+        }
 
-    .axis-label {
-      font-size: 0.5em;
-      fill: #8e8883;
-    }
+        .axis-label {
+            font-size: 0.5em;
+            fill: #8e8883;
+        }
 
-    .intro {
-      color: black;
-      text-overflow: ellipsis;
-      max-width: 960px;
-      font-size: 0.75em;
-    }
+        .intro {
+            color: black;
+            text-overflow: ellipsis;
+            max-width: 960px;
+            font-size: 0.75em;
+        }
 
-    .introTitle {
-      font-size: 1em;
-      font-weight: bold;
-      color: black;
-    }
-  </style>
-  <!-- Note: when deploying, replace "development.js" with "production.min.js". -->
-  <script src="https://unpkg.com/react@17/umd/react.development.js" crossorigin></script>
-  <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js" crossorigin></script>
-  <script src="https://unpkg.com/@babel/standalone@7.13.12/babel.min.js" crossorigin></script>
-  <script src="https://unpkg.com/d3@7.1.1/dist/d3.min.js" crossorigin></script>
-  <script src="https://unpkg.com/topojson@3.0.2/dist/topojson.min.js" crossorigin></script>
+        .introTitle {
+            font-size: 1em;
+            font-weight: bold;
+            color: black;
+        }
+    </style>
+    <!-- Note: when deploying, replace "development.js" with "production.min.js". -->
+    <script src="https://unpkg.com/react@17/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone@7.13.12/babel.min.js" crossorigin></script>
+    <script src="https://unpkg.com/d3@7.1.1/dist/d3.min.js" crossorigin></script>
+    <script src="https://unpkg.com/topojson@3.0.2/dist/topojson.min.js" crossorigin></script>
 </head>
 
 <body>
-  <noscript> You need to enable JavaScript to run this app. </noscript>
-  <h1>Missing Migrants across the Globe</h1>
-  <!-- This is where the visualization will be placed. -->
-  <div id="root"></div>
-  <script type="text/babel">
-    // the URL where the world atlas data is downloaded from
-    const jsonUrl = "https://unpkg.com/world-atlas@2.0.2/countries-50m.json";
+    <noscript> You need to enable JavaScript to run this app. </noscript>
+    <h1>Missing Migrants across the Globe</h1>
+    <!-- This is where the visualization will be placed. -->
+    <div id="root"></div>
+    <script type="text/babel">
+        // the URL where the world atlas data is downloaded from
+        const jsonUrl = "https://unpkg.com/world-atlas@2.0.2/countries-50m.json";
 
-    // place data reading logic in a hook (hooks start with 'use')
-    const useWorldAtlas = () => {
-      // this creates a state that returns a the data (represents the state) and
-      // a function that can be used to set the data (state)
-      // the state is initially null which tells the user that the data has no yet been loaded
-      const [data, setData] = React.useState(null);
+        // place data reading logic in a hook (hooks start with 'use')
+        const useWorldAtlas = () => {
+            // this creates a state that returns a the data (represents the state) and
+            // a function that can be used to set the data (state)
+            // the state is initially null which tells the user that the data has no yet been loaded
+            const [data, setData] = React.useState(null);
 
-      // useEffect ensures that the data is only loaded once. if it was loaded before the function
-      // is not executed again
-      React.useEffect(() => {
-        // using d3's json function we can download the json from the URL
-        // when the download has finished the function will be executed
-        d3.json(jsonUrl).then((topology) => {
-          // grab the countries and land masses from the topoJson file
-          const { countries, land } = topology.objects;
-          // this sets the data to the state defined before above
-          setData({
-            // convert the topoJson land to geoJson land using "feature(...)"
-            land: topojson.feature(topology, land),
-            // extract countries that do not face water
-            interiors: topojson.mesh(topology, countries, (a, b) => a !== b),
-          });
-        });
-      }, []);
-      // with the useState and useEffect combination this function (when called repeatedly) will in the beginning
-      // always return null (the data) until the download was finished and the data set. Then the same data will
-      // be returned and no additional downloads are necessary.
-      return data;
-    };
+            // useEffect ensures that the data is only loaded once. if it was loaded before the function
+            // is not executed again
+            React.useEffect(() => {
+                // using d3's json function we can download the json from the URL
+                // when the download has finished the function will be executed
+                d3.json(jsonUrl).then((topology) => {
+                    // grab the countries and land masses from the topoJson file
+                    const { countries, land } = topology.objects;
+                    // this sets the data to the state defined before above
+                    setData({
+                        // convert the topoJson land to geoJson land using "feature(...)"
+                        land: topojson.feature(topology, land),
+                        // extract countries that do not face water
+                        interiors: topojson.mesh(topology, countries, (a, b) => a !== b),
+                    });
+                });
+            }, []);
+            // with the useState and useEffect combination this function (when called repeatedly) will in the beginning
+            // always return null (the data) until the download was finished and the data set. Then the same data will
+            // be returned and no additional downloads are necessary.
+            return data;
+        };
 
-    // the URL where the missing migrants data is downloaded from
-    const csvUrl =
-      // "https://gist.githubusercontent.com/lamteteeow/3abc263709f02273722547f951953f6d/raw/3216c0b78d7c23fd20785e79c12dda24ec531a12/Missing_Migrants_Global_Figures_till_2023_cleaned.csv";
-      "https://gist.githubusercontent.com/lamteteeow/3abc263709f02273722547f951953f6d/raw/3216c0b78d7c23fd20785e79c12dda24ec531a12/Missing_Migrants_Global_Figures_till_2023_cleaned.csv";
+        // the URL where the missing migrants data is downloaded from
+        const csvUrl =
+            // "https://gist.githubusercontent.com/lamteteeow/3abc263709f02273722547f951953f6d/raw/3216c0b78d7c23fd20785e79c12dda24ec531a12/Missing_Migrants_Global_Figures_till_2023_cleaned.csv";
+            "https://gist.githubusercontent.com/lamteteeow/3abc263709f02273722547f951953f6d/raw/3216c0b78d7c23fd20785e79c12dda24ec531a12/Missing_Migrants_Global_Figures_till_2023_cleaned.csv";
 
-    // DONE 1.3 (Data Loading)
-    // --------------------------------------------------
+        // TODO 1.3 (Data Loading)
+        // --------------------------------------------------
 
-    // a helper that takes a csv row and transforms it into something we can work with
-    const row = (d) => {
-      d.coords = d["Location Coordinates"].split(",");
-      d["Total Dead and Missing"] = +d["Total Dead and Missing"];
-      d["Reported Date"] = new Date(d["Reported Date"]);
-      return d;
-    };
+        // a helper that takes a csv row and transforms it into something we can work with
+        const row = (d) => {
+            d.coords = d["Location Coordinates"].split(",");
+            d["Total Dead and Missing"] = +d["Total Dead and Missing"];
+            d["Reported Date"] = new Date(d["Reported Date"]);
+            return d;
+        };
 
-    // place data reading logic in a hook (hooks start with 'use')
-    const useData = () => {
-      let [newState, setNewState] = React.useState(null);
-      // useEffect ensures that the data is only loaded once. if it was loaded before the function
-      // is not executed again
-      React.useEffect(() => {
-        d3.csv(csvUrl, row).then(setNewState);
-      }, []);
-      // console.log(newState);
-      return newState;
-    };
+        // place data reading logic in a hook (hooks start with 'use')
+        const useData = () => {
+            let [newState, setNewState] = React.useState(null);
+            // useEffect ensures that the data is only loaded once. if it was loaded before the function
+            // is not executed again
+            React.useEffect(() => {
+                d3.csv(csvUrl, row).then(setNewState);
+            }, []);
+            // console.log(newState);
+            return newState;
+        };
 
-    // --------------------------------------------------
-    // DONE 1.5 (World Sphere and Graticule)
-    // --------------------------------------------------
-    const projection = d3.geoNaturalEarth1();
-    const path = d3.geoPath(projection); // or d3.geoPath().projection(projection)
-    const graticule = d3.geoGraticule();
+        // --------------------------------------------------
+        // TODO 1.5 (World Sphere and Graticule)
+        // --------------------------------------------------
+        const projection = d3.geoNaturalEarth1();
+        const path = d3.geoPath(projection); // or d3.geoPath().projection(projection)
+        const graticule = d3.geoGraticule();
 
-    // let pathString = geoGenerator(this.props.geoJson)
+        // let pathString = geoGenerator(this.props.geoJson)
 
-    // d3.select("#gg").append("path").attr("d", path);
-
-    const WorldGraticule = ({ worldAtlas: { land, interiors } }) => (
-      // TODO 4.2: Memoization for sphere and graticules
-
-      <g className="worldGraticule">
-        <path className="sphere" d={path({ type: 'Sphere' })} />
-        <path className="graticule" d={path(graticule())} />
-      </g >
-    );
-
-    // --------------------------------------------------
-    // DONE 2.1
-    // --------------------------------------------------
-
-    // the data we work on is composed of land and interiors (use destructuring)
-    const Countries = ({ worldAtlas: { land, interiors } }) => (
-      // TODO 4.2: Memoization for land and interiors
-      <g className="countries">
-        {
-          <>
-            {
-              land.features.map((feature, i) => (
-                <path key={i} className="land" d={path(feature)} />
-              ))
-            }
-            <path className="interiors" d={path(interiors)} />
-          </>
-        }
-      </g>
-
-    );
-
-    // --------------------------------------------------
-    // DONE 2.2
-    // --------------------------------------------------
-
-    const sizeValue = (data) => {
-      let dead_and_missing_values = [];
-      data.forEach(row => {
-        dead_and_missing_values.push(+row["Total Dead and Missing"]);
-      });
-      // console.log(dead_and_missing_values);
-      return dead_and_missing_values;
-    }
-
-    // defines the maximum radius of a bubble
-    const maxRadius = 15;
-
-    const Bubbles = ({ data }) => {
-      // TODO 4.2: Memoization for size scale
-      const sizeScale = d3.scaleSqrt().domain([0, d3.max(sizeValue(data))]).range([0, maxRadius]);
-      // console.log(d3.max(sizeValue(data))); // 1022
-      // console.log(sizeScale(28.))♫; // 15
-      return (
-        <g className="bubbleMarks">
-          {
-            data.map((row, i) => {
-              // the sequence order of both xy and lng lat matters since projection is a function that takes lng first then
-              // but row.coords is an array of lat, lng
-              const [x, y] = projection(row.coords.reverse());
-              return <circle key={i} cx={x} cy={y} r={sizeScale(row["Total Dead and Missing"])} />
-            })
-          }
-        </g>
-      );
-    };
-
-    // --------------------------------------------------
-    // DONE 1.2 and 1.4
-    // --------------------------------------------------
-
-    const Introduction = ({ data }) => {
-      const length = data.length;
-      const numberOfColumns = data.columns.length;
-      const size = Math.round(d3.csvFormat(data).length / 1024);
-
-      const introText = "This is an interactive visualization of the Missing Migrants Project dataset that has "
-        + length
-        + " rows, "
-        + numberOfColumns
-        + " columns and is "
-        + size
-        + " KB in size.";
-
-      // This returns the html elements which should be created by this component. A react fragment is required because
-      // multiple elements are used.
-      return (
-        <>
-          <div className="introTitle">
-            Description
-            <br />
-          </div>
-          <div className="intro">{introText}</div>
-        </>
-      );
-    };
-
-    // --------------------------------------------------
-    // TEMP 3.1 and 3.2
-    // --------------------------------------------------
-
-    // TEMP 3.2: create a AxisLeft component that takes the y scale, inner width and a tick offset
-    const AxisLeft = ({ yScale, innerWidth, tickOffset }) => {
-      // TEMP 3.2: on the y scale you can call the ticks() function which returns an array of tick positions
-      const ticks = yScale.ticks();
-      // TEMP 3.2: we map the tick positions to a group element containing a line and a text
-      return (
-        <>
-          {
-            ticks.map((tickValue, i) => (
-              // DONE 3.2: create a group element with class name tick
-              // TEMP 3.2: the key will be the tick value
-              // TEMP 3.2: move the group to the right position using the transform of the group element
-              <g key={i} className="tick" transform={`translate(0, ${yScale(tickValue)})`}>
-                {/*TEMP 3.2: now add the svg line element. Research which parameters it requires.
-                             Note that the y position is already correct due to the transform we applied to the group*/}
-                <line x2={innerWidth} />
-                {/* TEMP 3.2: add the text moved slightly to the left (use tick offset) 
-                    TEMP 3.2: set the style attribute to  to make sure it aligns properly
-                    TEMP 3.2: add the tick value as the text*/}
-                <text style={{ textAnchor: 'end' }} x={-tickOffset} dy=".32em">{tickValue}</text>
-              </g>
-            ))
-          }
-        </>
-      );
-    };
+        // d3.select("#gg").append("path").attr("d", path);
 
 
-    // TEMP 3.2: add the bottom axis in the same way as the axis left. You will need the innerHeight to specify for positioning the text and line
-    const AxisBottom = ({ xScale, innerHeight, tickOffset }) => {
-      const ticks = xScale.ticks();
-      return (
-        <>
-          {
-            ticks.map((tickValue, i) => (
-              <g key={i} className="tick" transform={`translate(${xScale(tickValue)}, 0)`}>
-                <line y2={innerHeight} />
-                {/* TEMP 3.2: the textAnchor style for the text should be middle now */}
-                <text style={{ textAnchor: 'middle' }} y={innerHeight + tickOffset} dy=".71em">{tickValue}</text>
-              </g>
-            ))
-          }
-        </>
-      );
-    };
+        // TODO 2.x: remove width and height. Add a new parameter for the world atlas. You can immediately extract the two componentes from world atlas by doing:
+        // {worldAtlas: {land, interiors}}
+        const WorldGraticule = ({ worldAtlas: { land, interiors } }) => (
+            // TODO 4.2: Memoization for sphere and graticules
 
-    // TEMP 3.2: create a Bars component that receives the binned data, x scale, y scale the tool
-    const Bars = ({ binnedData, xScale, yScale }) => {
-      return (
-        <>
-          {
-            // TEMP 3.2: map each binned data entry to a rectangle
-            binnedData.map((d, i) => (
-              <rect
-                // TEMP 3.2: key is the index
-                key={i}
-                // TEMP 3.2: className should be bar
-                className="bar"
-                // TEMP 3.2: all of the following must be passed through x scale or y scale
-                // TEMP 3.2: x coordinate is the beginning of the bar on the x axis
-                x={xScale(d[0])}
-                // TEMP 3.2: y coordinate is the top height of each bar (keep in mind that the origin of the coordinate system is in the top left)
-                y={yScale(d.length)}
-                // TEMP 3.2: width of a bar should be the difference between start and end date of each bar
-                width={xScale(d.x1) - xScale(d.x0)}
-                // TEMP 3.2: height must be the inner height minus the height of the bar
-                height={yScale(0) - yScale(d.length)}
-              />
-            ))
-          }
-        </>
-      );
-    };
+            <g className="worldGraticule">
+                <path className="sphere" d={path({ type: 'Sphere' })} />
+                <path className="graticule" d={path(graticule())} />
+            </g >
+        );
 
-    // TEMP 3.1: Define an accessor function to access the total number of dead and missing migrants
-    // 			 ("Total Dead and Missing") from the original data table.
-    const yAccessor = (d) => d["Total Dead and Missing"];
-    // TEMP 3.2: Define variables containing the text of your y axis label (we won't define an x axis label)
-    // variables for the offset of the axis label
-    const yLabel = "Number of Dead and Missing";
-    const yAxisLabelOffset = 30;
-    // margin (small gaps on the sides of the bar chart)
-    const margin = { top: 0, right: 30, bottom: 20, left: 45 };
-    // TEMP 3.2: Define a time format using d3.timeFormat
-    const timeFormatter = d3.timeFormat("%m/%d/%Y");
-    // TODO 4.1: brush extent setter as parameter
+        // --------------------------------------------------
+        // TODO 2.1
+        // --------------------------------------------------
 
-    const Histogram = ({ width, height }) => {
-      // TEMP 3.1: compute innerHeight and innerWidth by subtracting the margins from width and height. If
-      // 			you replace width and height in the placeholder rectangle below you will see it shrinking but
-      // 			move to the wrong place. We will take care of that later
-      const innerHeight = height - margin.top - margin.bottom;
-      const innerWidth = width - margin.left - margin.right;
-
-      // TEMP 3.1: Define an accessor function to access the date of the incident ("Reported Date") from
-      // 			 the orignal data table.
-      const xAccessor = (d) => d["Reported Date"];
-
-      // TEMP 3.1: define the xScale using d3.scaleTime
-      // TEMP 3.1: domain from min to max value of data. u can use d3.extent
-      // TEMP 3.1: the range starts at zero and ends at inner width
-      // TEMP 3.1: call nice to make it nice numbers for labeling
-      let xScale = d3.scaleTime()
-        .domain(d3.extent(data, xAccessor))
-        .range([0, innerWidth])
-        .nice();
-
-      // TODO 4.2: Memoization for scale
-      // TEMP 3.1: grab the start and end from the domain
-      const [start, end] = xScale.domain();
-
-      // TEMP 3.1: aggregate the data into bins you can find a detailed description in the pdf
-      threshold = d3.timeMonth(start, end);
-      const binnedData = d3.bin()
-        .value(xAccessor)
-        .domain(xScale.domain())
-        .thresholds(threshold)(data);
-
-      // TODO 4.2: Memoization for the binned data
-
-      // TEMP 3.2: use scaleLinear to define the scale of the y value in the bar chart (requires computation of binned data first)
-      // TEMP 3.2: domain starts a zero and ends at maximum (d3.max) of binned data
-      // TEMP 3.2: range is up to inner height
-      let yScale = d3.scaleLinear()
-        .domain([0, d3.max(binnedData, d => d.length)])
-        .range([innerHeight, 0])
-        .nice();
-
-
-      // TODO 4.2: Memoization for scale
-
-      // TODO 4.1: D3 provides a horizontal brush object called d3.brushX that can be manipulated interactively. The brush
-      // 			 element itself is a part of the DOM, i.e., it is a graphical element.  For manipulation of DOM elements
-      // 			 through JSX, we need a reference to them. use React.useRef() to create a const brushRef
-      // TODO 4.1: When loading the data we used React.useEffect to ensure that the code was only executed once and performing
-      // 			 side effects. We want do the same here to setup the brush and create a side effect of the brush which will
-      // 			 call the setter of brush extent that we passed in earlier.
-      // TODO 4.1: the useEffect function requires a list of dependencies. Think about what variables the function depends on.
-      // TODO 4.1: setup the brush using d3.brushX() and set its extent. assign it to a variable called brush
-      // TODO 4.1: connect the brush with the group element by calling brush() on the group element (use d3.select())
-      // TODO 4.1: add an event listener to the brush which listens for the "brush end" event. inside set the brush extent.
-      //  		 You have to invert the selection by mapping the selection using xScale.invert
-
-      return (
-        <>
-          {/* TEMP 3.2: delete the placeholder rectangle
-              TEMP 3.2: return a width by height, filled, white rectangle as the background */}
-          <rect
-            width={width}
-            height={height}
-            fill="white"
-            stroke="#d95f02"
-            strokeWidth="3"
-          />
-
-          {/* TEMP 3.2: create a group element which transforms everything inside it by the margins for top and left*/}
-
-          {/* TEMP 3.2: When you finished the AxisLeft component, add it here and pass the necessary data.*/}
-          {/* TEMP 3.2: Experiment with the tick offset to find a good value.*/}
-          <AxisLeft yScale={yScale} innerWidth={innerWidth} tickOffset={3} />
-          {/* TEMP 3.2: When you finished the AxisBottom component, add it here and pass the necessary data.*/}
-          {/* TEMP 3.2: Experiment with the tick offset to find a good value.*/}
-          <AxisBottom xScale={xScale} innerHeight={innerHeight} tickOffset={3} />
-          {/* TEMP 3.2: When you finished the Bars component, add it here and pass the necessary data.*/}
-          {/* TEMP 3.2: Experiment with the barOffset to find a good value.*/}
-          <Bars binnedData={binnedData} yScale={yScale} xScale={xScale} barOffset={3} />
-          {/* TEMP 3.2: Add a text element which contains your y axis label. Give it the class name axis-label and use 'middle' as
-                      the text anchor. The text should be rotated by 90 degrees and positioned to the left of the axis. The best 
-                      way to do so is to use the transform attribute of the text element. */}
-          <text className="axis-label" textAnchor="middle" transform={`translate(${-yAxisLabelOffset}, ${innerHeight / 2}) rotate(-90)`}>{yLabel}</text>
-          {/* TODO 4.1: add a group element with attrbute ref being the previously defined reference to the brush*/}
-        </>
-      );
-    };
-
-
-    // This is the central component which wires everything together and will be rendered to the root element that
-    // is specified in the html section of this file.
-    const App = () => {
-      const width = 960;
-      const height = 500;
-      const dateHistogramSize = 0.2;
-
-      // TODO 4.1: Setup a state using React.useState similar to what we did for loading the data.
-
-      // read world atlas data amd migrant data
-      const worldAtlas = useWorldAtlas();
-      const data = useData();
-      if (!data) {
-        return <pre>Loading...</pre>;
-      }
-
-      // TODO 4.1: define an accessor function that will be used when filtering the data. The function
-      // 			 should extract the reported date of the incident.
-
-      // TODO 4.1: Setup the filtered data. The data is filtered based on the extent of the brush.
-      // 			 Use .filter on the data to only include values that are within the brush extent.
-      // 			 Make sure to handle the situation when the brush extent is not yet defined.
-
-      return (
-        <>
-          <Introduction data={data} />
-          <svg width={width} height={height}>
-            <WorldGraticule worldAtlas={worldAtlas} />
-            <Countries worldAtlas={worldAtlas} />
-            <Bubbles data={data} />
-            // TODO 4.1: Pass the filtered data to bubbles
-            <g
-              transform={`translate(0, ${height - dateHistogramSize * height})`}
-            >
-                // TODO 4.1: Pass the setter function of the brush extent to Histogram
-              <Histogram width={width} height={height * 0.2} />
+        // the data we work on is composed of land and interiors (use destructuring)
+        const Countries = ({ worldAtlas: { land, interiors } }) => (
+            // TODO 4.2: Memoization for land and interiors
+            <g className="countries">
+                {
+                    <>
+                        {
+                            land.features.map((feature, i) => (
+                                <path key={i} className="land" d={path(feature)} />
+                            ))
+                        }
+                        <path className="interiors" d={path(interiors)} />
+                    </>
+                }
             </g>
-          </svg>
-        </>
-      );
-    };
 
-    // place the visualization into the root element
-    ReactDOM.render(<App />, document.getElementById("root"));
-  </script>
+        );
+
+        // --------------------------------------------------
+        // TODO 2.2
+        // --------------------------------------------------
+
+        const sizeValue = (data) => {
+            let dead_and_missing_values = [];
+            data.forEach(row => {
+                dead_and_missing_values.push(+row["Total Dead and Missing"]);
+            });
+            // console.log(dead_and_missing_values);
+            return dead_and_missing_values;
+        }
+
+        // const sizeValue2 = (data) => {
+        //   let csvData = d3.csvFormat(data.head);
+        //   // return column "Total Dead and Missing" from parsedData
+        //   console.log(csvData);
+        //   return csvData["Total Dead and Missing"]
+        // }
+
+        // defines the maximum radius of a bubble
+        const maxRadius = 15;
+
+        // const helperCoord = (array) => {
+        //   let newArray = [];
+        //   console.log(array);
+        //   array.forEach((coords, arrIndex) => {
+        //     // console.log(coords, arrIndex);
+        //     let newCoords = Number(coords);
+        //     // console.log(typeof newCoords, newCoords);
+        //     // console.log(Number('-180') + 200);
+        //     // console.log(newX);
+        //     // let newCoords = Number(coords) + 180;
+        //     // console.log([newXt newCoords]);
+        //     // console.log(newCoords + ", " + newX);
+        //     newArray.push(newCoords);
+        //   });
+        //   console.log(newArray);
+        //   return projection(newArray);
+        // }
+
+        const Bubbles = ({ data }) => {
+            // TODO 4.2: Memoization for size scale
+            const sizeScale = d3.scaleSqrt().domain([0, d3.max(sizeValue(data))]).range([0, maxRadius]);
+            // console.log(d3.max(sizeValue(data))); // 1022
+            // console.log(sizeScale(28)); // 15
+            return (
+                <g className="bubbleMarks">
+                    {
+                        data.map((row, i) => {
+                            // the sequence order of both xy and lng lat matters since projection is a function that takes lng first then lat
+                            // but row.coords is an array of lat, lng
+                            const [x, y] = projection(row.coords.reverse());
+                            return <circle key={i} cx={x} cy={y} r={sizeScale(row["Total Dead and Missing"])} />
+                        })
+                    }
+                </g>
+            );
+        };
+
+        // --------------------------------------------------
+        // TODO 1.2 and 1.4
+        // --------------------------------------------------
+
+        const Introduction = ({ data }) => {
+            const length = data.length;
+            const numberOfColumns = data.columns.length;
+            const size = Math.round(d3.csvFormat(data).length / 1024);
+
+            const introText = "This is an interactive visualization of the Missing Migrants Project dataset that has "
+                + length
+                + " rows, "
+                + numberOfColumns
+                + " columns and is "
+                + size
+                + " KB in size.";
+
+            // This returns the html elements which should be created by this component. A react fragment is required because
+            // multiple elements are used.
+            return (
+                <>
+                    <div className="introTitle">
+                        Description
+                        <br />
+                    </div>
+                    <div className="intro">{introText}</div>
+                </>
+            );
+        };
+
+        // --------------------------------------------------
+        // TODO 3.1 and 3.2
+        // --------------------------------------------------
+
+        // TODO 3.2: create a AxisLeft component that takes the y scale, inner width and a tick offset
+        // TODO 3.2: on the y scale you can call the ticks() function which returns an array of tick positions
+        // TODO 3.2: we map the tick positions to a group element containing a line and a text
+        // TODO 3.2: create a group element with class name tick
+        // TODO 3.2: the key will be the tick value
+        // TODO 3.2: move the group to the right position using the transform of the group element
+        // TODO 3.2: now add the svg line element. Research which parameters it requires. Note that the y position is already correct due to the
+        // 			 transform we applied to the group
+        // TODO 3.2: add the text moved slightly to the left (use tick offset)
+        // TODO 3.2: set the style attribute to  to make sure it aligns properly
+        // TODO 3.2: add the tick value as the text
+
+        // TODO 3.2: add the bottom axis in the same way as the axis left. You will need the innerHeight to specify for positioning the text and line
+        // TODO 3.2: the textAnchor style for the text should be middle now
+
+        // TODO 3.2: create a Bars component that receives the binned data, x scale, y scale the tool
+        // TODO 3.2: map each binned data entry to a rectangle
+        // TODO 3.2: className should be bar
+        // TODO 3.2: key is the index
+        // TODO 3.2: all of the following must be passed through x scale or y scale
+        // TODO 3.2: x coordinate is the beginning of the bar on the x axis
+        // TODO 3.2: y coordinate is the top height of each bar (keep in mind that the origin of the coordinate system is in the top left)
+        // TODO 3.2: width of a bar should be the difference between start and end date of each bar
+        // TODO 3.2: height must be the inner height minus the height of the bar
+
+        // TODO 3.1: Define an accessor function to access the total number of dead and missing migrants
+        // 			 ("Total Dead and Missing") from the original data table.
+        // TODO 3.2: Define variables containing the text of your y axis label (we won't define an x axis label)
+        // variables for the offset of the axis label
+        const yAxisLabelOffset = 30;
+        // margin (small gaps on the sides of the bar chart)
+        const margin = { top: 0, right: 30, bottom: 20, left: 45 };
+        // TODO 3.2: Define a time format using d3.timeFormat
+
+        // TODO 4.1: brush extent setter as parameter
+        const Histogram = ({ width, height }) => {
+            // TODO 3.1: compute innerHeight and innerWidth by subtracting the margins from width and height. If
+            // 			you replace width and height in the placeholder rectangle below you will see it shrinking but
+            // 			move to the wrong place. We will take care of that later
+            // TODO 3.1: Define an accessor function to access the date of the incident ("Reported Date") from
+            // 			 the orignal data table.
+
+            // TODO 3.1: define the xScale using d3.scaleTime
+            // TODO 3.1: domain from min to max value of data. u can use d3.extent
+            // TODO 3.1: the range starts at zero and ends at inner width
+            // TODO 3.1: call nice to make it nice numbers for labeling
+            // TODO 4.2: Memoization for scale
+
+            // TODO 3.1: grab the start and end from the domain
+
+            // TODO 3.1: aggregate the data into bins you can find a detailed description in the pdf
+            // TODO 4.2: Memoization for the binned data
+
+            // TODO 3.2: use scaleLinear to define the scale of the y value in the bar chart (requires computation of binned data first)
+            // TODO 3.2: domain starts a zero and ends at maximum (d3.max) of binned data
+            // TODO 3.2: range is up to inner height
+            // TODO 4.2: Memoization for scale
+
+            // TODO 4.1: D3 provides a horizontal brush object called d3.brushX that can be manipulated interactively. The brush
+            // 			 element itself is a part of the DOM, i.e., it is a graphical element.  For manipulation of DOM elements
+            // 			 through JSX, we need a reference to them. use React.useRef() to create a const brushRef
+            // TODO 4.1: When loading the data we used React.useEffect to ensure that the code was only executed once and performing
+            // 			 side effects. We want do the same here to setup the brush and create a side effect of the brush which will
+            // 			 call the setter of brush extent that we passed in earlier.
+            // TODO 4.1: the useEffect function requires a list of dependencies. Think about what variables the function depends on.
+            // TODO 4.1: setup the brush using d3.brushX() and set its extent. assign it to a variable called brush
+            // TODO 4.1: connect the brush with the group element by calling brush() on the group element (use d3.select())
+            // TODO 4.1: add an event listener to the brush which listens for the "brush end" event. inside set the brush extent.
+            //  		 You have to invert the selection by mapping the selection using xScale.invert
+
+            return (
+                <>
+            // TODO 3.2: delete the placeholder rectangle
+                    <rect
+                        width={width}
+                        height={height}
+                        fill="none"
+                        stroke="#d95f02"
+                        strokeWidth="3"
+                    />
+            // TODO 3.2: return a width by height, filled, white rectangle as the background
+                // TODO 3.2: create a group element which transforms everything inside it by the margins for top and left 
+                // TODO 3.2: When you finished the AxisLeft component, add it here and pass the necessary data. 
+                // TODO 3.2: Experiment with the tick offset to find a good value. 
+                // TODO 3.2: When you finished the AxisBottom component, add it here and pass the necessary data. 
+                // TODO 3.2: Experiment with the tick offset to find a good value. 
+                // TODO 3.2: When you finished the Bars component, add it here and pass the necessary data. 
+                // TODO 3.2: Add a text element which contains your y axis label. Give it the class name axis-label and use 'middle' as
+                //           the text anchor. The text should be rotated by 90 degrees and positioned to the left of the axis. The best 
+                //           way to do so is to use the transform attribute of the text element. 
+                // TODO 4.1: add a group element with attrbute ref being the previously defined reference to the brus
+                </>
+            );
+        };
+
+
+        // This is the central component which wires everything together and will be rendered to the root element that
+        // is specified in the html section of this file.
+        const App = () => {
+            const width = 960;
+            const height = 500;
+            const dateHistogramSize = 0.2;
+
+            // TODO 4.1: Setup a state using React.useState similar to what we did for loading the data.
+
+            // read world atlas data amd migrant data
+            const worldAtlas = useWorldAtlas();
+            const data = useData();
+            if (!data) {
+                return <pre>Loading...</pre>;
+            }
+
+            // TODO 4.1: define an accessor function that will be used when filtering the data. The function
+            // 			 should extract the reported date of the incident.
+
+            // TODO 4.1: Setup the filtered data. The data is filtered based on the extent of the brush.
+            // 			 Use .filter on the data to only include values that are within the brush extent.
+            // 			 Make sure to handle the situation when the brush extent is not yet defined.
+
+            return (
+                <>
+                    <Introduction data={data} />
+                    <svg width={width} height={height}>
+                        <WorldGraticule worldAtlas={worldAtlas} />
+                        <Countries worldAtlas={worldAtlas} />
+                        <Bubbles data={data} />
+            // TODO 4.1: Pass the filtered data to bubbles
+                        <g
+                            transform={`translate(0, ${height - dateHistogramSize * height})`}
+                        >
+                // TODO 4.1: Pass the setter function of the brush extent to Histogram
+                            <Histogram width={width} height={height * 0.2} />
+                        </g>
+                    </svg>
+                </>
+            );
+        };
+
+        // place the visualization into the root element
+        ReactDOM.render(<App />, document.getElementById("root"));
+    </script>
 </body>
 
 </html>
