@@ -154,7 +154,7 @@
     // d3.select("#gg").append("path").attr("d", path);
 
     const WorldGraticule = ({ worldAtlas: { land, interiors } }) => (
-      // TEMP 4.2: Memoization for sphere and graticules
+      // DONE 4.2: Memoization for sphere and graticules
 
       // <g className="worldGraticule">
       //   <path className="sphere" d={path({ type: 'Sphere' })} />
@@ -175,7 +175,7 @@
 
     // the data we work on is composed of land and interiors (use destructuring)
     const Countries = ({ worldAtlas: { land, interiors } }) => (
-      // TEMP 4.2: Memoization for land and interiors
+      // DONE 4.2: Memoization for land and interiors
       // <g className="countries">
       //   { 
       //     <>
@@ -223,7 +223,7 @@
     const maxRadius = 15;
 
     const Bubbles = ({ data }) => {
-      // TODO 4.2: Memoization for size scale
+      // DONE 4.2: Memoization for size scale
       const sizeScale = React.useMemo(() => d3.scaleSqrt()
         .domain([0, d3.max(data, sizeValue)])
         .range([0, maxRadius]), [data, sizeValue, maxRadius]);
@@ -374,7 +374,7 @@
     const timeFormatter = d3.timeFormat("%d.%m.%Y");
     const timeParser = d3.timeParse("%d.%m.%Y");
 
-    // TEMP 4.1: brush extent setter as parameter
+    // DONE 4.1: brush extent setter as parameter
     const Histogram = ({ width, height, data, setBrushExtent }) => {
       // DONE 3.1: compute innerHeight and innerWidth by subtracting the margins from width and height. If
       // 			you replace width and height in the placeholder rectangle below you will see it shrinking but
@@ -412,7 +412,7 @@
       //   .nice();
 
 
-      // TEMP 4.2: Memoization for scale
+      // DONE 4.2: Memoization for scale
       const xScale = React.useMemo(() => d3.scaleTime()
         .domain(d3.extent(data, xValue))
         .range([0, innerWidth])
@@ -442,7 +442,7 @@
       //   y: d3.sum(d, yValue)
       // }));
 
-      // TEMP 4.2: Memoization for the binned data
+      // DONE 4.2: Memoization for the binned data
       const binnedData = React.useMemo(() => {
         const [start, end] = xScale.domain();
         return d3.bin()
@@ -467,7 +467,7 @@
       // console.log(yScale);
 
 
-      // TEMP 4.2: Memoization for scale
+      // DONE 4.2: Memoization for scale
       const yScale = React.useMemo(() =>
         d3.scaleLinear()
           .domain([0, d3.max(binnedData, d => d.y)])
@@ -476,17 +476,17 @@
         [binnedData, innerHeight]
       );
 
-      // TEMP 4.1: D3 provides a horizontal brush object called d3.brushX that can be manipulated interactively. The brush
+      // DONE 4.1: D3 provides a horizontal brush object called d3.brushX that can be manipulated interactively. The brush
       // 			 element itself is a part of the DOM, i.e., it is a graphical element.  For manipulation of DOM elements
       // 			 through JSX, we need a reference to them. use React.useRef() to create a const brushRef
       const brushRef = React.useRef();
-      // TEMP 4.1: When loading the data we used React.useEffect to ensure that the code was only executed once and performing
+      // DONE 4.1: When loading the data we used React.useEffect to ensure that the code was only executed once and performing
       // 			 side effects. We want do the same here to setup the brush and create a side effect of the brush which will
       // 			 call the setter of brush extent that we passed in earlier.
-      // TEMP 4.1: the useEffect function requires a list of dependencies. Think about what variables the function depends on.
-      // TEMP 4.1: setup the brush using d3.brushX() and set its extent. assign it to a variable called brush
-      // TEMP 4.1: connect the brush with the group element by calling brush() on the group element (use d3.select())
-      // TEMP 4.1: add an event listener to the brush which listens for the "brush end" event. inside set the brush extent.
+      // DONE 4.1: the useEffect function requires a list of dependencies. Think about what variables the function depends on.
+      // DONE 4.1: setup the brush using d3.brushX() and set its extent. assign it to a variable called brush
+      // DONE 4.1: connect the brush with the group element by calling brush() on the group element (use d3.select())
+      // DONE 4.1: add an event listener to the brush which listens for the "brush end" event. inside set the brush extent.
       //  		 You have to invert the selection by mapping the selection using xScale.invert
       React.useEffect(() => {
         const brush = d3.brushX().extent([[0, 0], [innerWidth, innerHeight]]);
@@ -536,7 +536,7 @@
                       the text anchor. The text should be rotated by 90 degrees and positioned to the left of the axis. The best 
                       way to do so is to use the transform attribute of the text element. */}
             <text className="axis-label" textAnchor="middle" transform={`translate(${-yAxisLabelOffset}, ${innerHeight / 2}) rotate(-90)`}>{yLabel}</text>
-            {/* TEMP 4.1: add a group element with attrbute ref being the previously defined reference to the brush*/}
+            {/* DONE 4.1: add a group element with attrbute ref being the previously defined reference to the brush*/}
             <g ref={brushRef} />
           </g>
         </>
@@ -553,7 +553,7 @@
       const leftPadding = 0;
       const topPadding = 50;
 
-      // TEMP 4.1: Setup a state using React.useState similar to what we did for loading the data.
+      // DONE 4.1: Setup a state using React.useState similar to what we did for loading the data.
       const [brushExtent, setBrushExtent] = React.useState(); // why inside App component?
       // console.log(brushExtent);
 
@@ -564,11 +564,11 @@
         return <pre>Loading...</pre>;
       }
 
-      // TEMP 4.1: define an accessor function that will be used when filtering the data. The function
+      // DONE 4.1: define an accessor function that will be used when filtering the data. The function
       // 			 should extract the reported date of the incident.
       const xValue = (d) => d['Reported Date'];
 
-      // TEMP 4.1: Setup the filtered data. The data is filtered based on the extent of the brush.
+      // DONE 4.1: Setup the filtered data. The data is filtered based on the extent of the brush.
       // 			 Use .filter on the data to only include values that are within the brush extent.
       // 			 Make sure to handle the situation when the brush extent is not yet defined.
       // const filteredData = brushExtent ? data.filter((d) => xValue(d) > brushExtent[0] && xValue(d) < brushExtent[1]) : data;
@@ -588,10 +588,10 @@
             <WorldGraticule worldAtlas={worldAtlas} />
             <Countries worldAtlas={worldAtlas} />
             {/* <Bubbles data={data} /> */}
-            // TEMP 4.1: Pass the filtered data to bubbles
+            // DONE 4.1: Pass the filtered data to bubbles
             <Bubbles data={filteredData} />
             <g transform={`translate(0, ${height - dateHistogramSize * height})`}>
-                // TEMP 4.1: Pass the setter function of the brush extent to Histogram
+                // DONE 4.1: Pass the setter function of the brush extent to Histogram
               <Histogram width={width} height={height * 0.2} data={data} setBrushExtent={setBrushExtent} />
             </g>
           </svg>
